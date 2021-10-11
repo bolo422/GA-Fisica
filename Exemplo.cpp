@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <iterator>
+#include <fstream>
+#include <vector>
+#include <algorithm> 
 
 using namespace std;
 
@@ -32,26 +36,11 @@ private:
 
 public:
 	MyTest() {
-		bool criarParedes = true;
-		if (criarParedes) {
-			/*
-			vs[0].Set(2.0f, 0.0f);
-			vs[1].Set(2.0f, 2.5f);
-			vs[2].Set(0.5f, 4.5f);
-			vs[3].Set(0.5f, 18.0f);
-			*/
-
-			float mult = 2.0f;
-			b2Vec2* sd = new b2Vec2(2.0f * mult, 0.0f * mult);
-			b2Vec2* se = new b2Vec2(2.0f * mult, 2.5f * mult);
-			b2Vec2* id = new b2Vec2(0.5f * mult, 4.5f * mult);
-			b2Vec2* ie = new b2Vec2(0.5f * mult, 18.0f * mult);
-
-			b2Body* edge1 = createEdge(*sd, *se);
-			b2Body* edge2 = createEdge(*se, *id);
-			b2Body* edge3 = createEdge(*id, *ie);
-			b2Body* edge4 = createEdge(*ie, *sd);
-		}
+		
+		criarParedes("paredes1.txt");
+		criarParedes("arco direita.txt");
+		criarParedes("arco esquerda.txt");
+		
 	}
 
 	void Step(Settings& settings) override
@@ -576,6 +565,29 @@ public:
 
 	}
 
+	void criarParedes(string arquivo)
+	{
+		ifstream is(arquivo);
+		istream_iterator<double> start(is), end;
+		vector<double> numbers(start, end);
+		cout << "Read " << numbers.size() << " " << arquivo << endl;
+
+		// print the numbers to stdout
+		cout << "numbers read in:\n";
+		copy(numbers.begin(), numbers.end(),
+			ostream_iterator<double>(cout, " "));
+		cout << endl;
+
+
+		float mult = 2.0f;
+		b2Body* paredes;
+		for (int i = 0; i < numbers.size()-1; i += 2)
+		{
+			if(i+3<=numbers.size())
+				paredes = createEdge(b2Vec2(numbers[i] * mult, numbers[i + 1] * mult), b2Vec2(numbers[i + 2] * mult, numbers[i + 3] * mult));
+		}
+		
+	}
 
 };
 
@@ -597,3 +609,4 @@ float degToRad(float angleDeg)
 {
 	return angleDeg * b2_pi / 180.0f;
 }
+
