@@ -40,6 +40,8 @@ public:
 		criarParedes("paredes1.txt");
 		criarParedes("arco direita.txt");
 		criarParedes("arco esquerda.txt");
+
+		
 		
 	}
 
