@@ -26,13 +26,16 @@ private:
 	b2RevoluteJoint* rjoint2;
 	bool m_button;
 	float flipperForce = 8000.0f;
-
+	int x = 57, y = 1;
 	bool a = false;
+	bool bolacri = false;
+	bool aumentando = true;
 	float circleRest = 0.8;
 	float topcirclerest = 0.5;
 	float boxRest = 1.2;
-	float forca = 0;
 	int pontos = 0;
+	float globalForce = 0, globalAngle = 90;
+	float forca = 0;
 
 public:
 	MyTest() {
@@ -138,6 +141,23 @@ public:
 			rjoint2->SetMotorSpeed(10.0f);
 		}
 
+		//srand((unsigned)time(0)); //para gerar números aleatórios reais.
+		//int maior = 150;
+		//int menor = 0;
+		//forca = rand() % (maior - menor + 1) + menor;
+		if (aumentando) {
+			forca++;
+			if (forca > 150) {
+				aumentando = false;
+			}
+		}
+		if (!aumentando) {
+			forca--;
+			if (forca < 20) {
+				aumentando = true;
+			}
+		}
+
 
 		//Chama o passo da simulação e o algoritmo de rendering
 		Test::Step(settings);
@@ -150,18 +170,22 @@ public:
 
 	void UpdateUI() override
 	{
+
+		
 		ImGui::SetNextWindowPos(ImVec2(10.0f, 100.0f));
 		ImGui::SetNextWindowSize(ImVec2(210.0f, 285.0f));
-		ImGui::Begin("TESTE", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+		ImGui::Begin("PINBALL", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
-		if (ImGui::Button("Shape 1"))
+		if (ImGui::Button("FORCA"))
 		{
 			Create();
 		}
 
-		ImGui::SliderFloat("Força", &forca, 0.0f, 360.0f, "%.0f");
+		ImGui::SliderFloat("", &forca, 0.0f, 150.0f, "%.0f");
 		ImGui::Text("Pontos:%d", pontos);
 		ImGui::End();
+
+		
 	}
 
 	static Test* Create()  //a classe Test que instancia um objeto da sua nova classe
@@ -178,6 +202,15 @@ public:
 		case GLFW_KEY_A:
 			m_button = true;
 			break;
+
+		case GLFW_KEY_E:
+			if (key == GLFW_KEY_E) {
+				
+				globalForce = forca;
+			}
+			break;
+
+		
 		}
 	}
 
@@ -187,6 +220,34 @@ public:
 		{
 		case GLFW_KEY_A:
 			m_button = false;
+			break;
+		case GLFW_KEY_E:
+			if (key == GLFW_KEY_E  ) {
+			
+				if (bolacri == false)
+				{
+					b2BodyDef bodyDef;
+					bodyDef.type = b2_dynamicBody;
+					bodyDef.position.Set(x, y);
+					b2Body* body = m_world->CreateBody(&bodyDef);
+
+					// Define another box shape for our dynamic body.
+					b2CircleShape circle;
+					circle.m_radius = 0.7;
+					//dynamicBox.SetAsBox(dim.x, dim.y);
+					b2FixtureDef fixtureDef;
+					fixtureDef.shape = &circle;
+					fixtureDef.density = 1;
+					fixtureDef.friction = 1;
+					fixtureDef.restitution = 0.2;
+					body->CreateFixture(&fixtureDef);
+
+					b2Vec2 force = decomposeVector(globalAngle, globalForce);
+					body->ApplyLinearImpulse(force, body->GetWorldCenter(), true);
+					bolacri = true;
+				}
+				
+			}
 			break;
 		}
 	}
