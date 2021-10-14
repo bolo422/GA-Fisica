@@ -9,6 +9,7 @@
 #include <fstream>
 #include <vector>
 #include <algorithm> 
+#include "imgui/imgui.h"
 
 using namespace std;
 
@@ -20,13 +21,18 @@ class MyTest : public Test //você cria a sua classe derivada da classe base Test
 {
 
 private:
-	float circleRest = 0.8;
-	float boxRest = 0.2;
-
+	
 	b2RevoluteJoint* rjoint;
 	b2RevoluteJoint* rjoint2;
 	bool m_button;
 	float flipperForce = 8000.0f;
+
+	bool a = false;
+	float circleRest = 0.8;
+	float topcirclerest = 0.5;
+	float boxRest = 1.2;
+	float forca = 0;
+	int pontos = 0;
 
 public:
 	MyTest() {
@@ -56,7 +62,7 @@ public:
 		createCircle(b2Vec2(34.9199, 55.8419), 2, circleRest); //circulos do meio
 		createCircle(b2Vec2(30.1608, 51.3208), 2, circleRest); //circulos do meio
 
-		createCircle(b2Vec2(6.62231, 74.9578), 2, circleRest); //circulo do topo
+		createCircle(b2Vec2(6.62231, 74.9578), 2, topcirclerest); //circulo do topo
 
 		// Flippers
 		
@@ -91,6 +97,33 @@ public:
 
 	}
 
+	void BeginContact(b2Contact* contact)
+	{
+
+		for (b2Contact* c = m_world->GetContactList(); c; c = c->GetNext())
+		{
+			if (c->GetRestitution() == circleRest && a == false)
+			{
+				pontos += 10;
+			}
+			if (c->GetRestitution() == boxRest && a == false)
+			{
+				pontos += 5;
+			}
+			if (c->GetRestitution() == topcirclerest && a == false)
+			{
+				pontos += 30;
+			}
+		}
+		a = true;
+	}
+	void EndContact(b2Contact* contact)
+	{
+		a = false;
+
+
+	}
+
 	void Step(Settings& settings) override
 	{
 
@@ -113,6 +146,22 @@ public:
 		g_debugDraw.DrawString(5, m_textLine, "Pinball GA - Erick e Jonathan");
 		m_textLine += 15;
 
+	}
+
+	void UpdateUI() override
+	{
+		ImGui::SetNextWindowPos(ImVec2(10.0f, 100.0f));
+		ImGui::SetNextWindowSize(ImVec2(210.0f, 285.0f));
+		ImGui::Begin("TESTE", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+		if (ImGui::Button("Shape 1"))
+		{
+			Create();
+		}
+
+		ImGui::SliderFloat("Força", &forca, 0.0f, 360.0f, "%.0f");
+		ImGui::Text("Pontos:%d", pontos);
+		ImGui::End();
 	}
 
 	static Test* Create()  //a classe Test que instancia um objeto da sua nova classe
