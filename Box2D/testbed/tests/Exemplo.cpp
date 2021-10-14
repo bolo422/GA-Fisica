@@ -33,16 +33,51 @@ private:
 	b2Body* player;
 	int playerJumps;
 
+	float circleRest = 0.8;
+	float boxRest = 0.2;
 
 public:
 	MyTest() {
 		
-		criarParedes("paredes1.txt");
-		criarParedes("arco direita.txt");
-		criarParedes("arco esquerda.txt");
+		criarParedes("paredes/paredes1.txt");
+		criarParedes("paredes/arco direita.txt");
+		criarParedes("paredes/arco direita inferior.txt");
+		criarParedes("paredes/arco esquerda inferior.txt");
+		criarParedes("paredes/triangulo inferior.txt");
+		criarParedes("paredes/triangulo meio.txt");
 
-		
-		
+		createBox(b2Vec2(12, 45), b2Vec2(0.8, 8), degToRad(40), boxRest); //rampa grande
+		createBox(b2Vec2(22, 45), b2Vec2(0.4, 3), degToRad(80), boxRest); // rampa pequena
+
+		createBox(b2Vec2(42.6342, 71.0173), b2Vec2(0.6, 3), degToRad(40), boxRest); //retangulos do topo
+		createBox(b2Vec2(34.3948, 71.4005), b2Vec2(0.6, 3), degToRad(146), boxRest); //retangulos do topo
+		createBox(b2Vec2(28.2392, 70.9215), b2Vec2(0.6, 3), degToRad(9), boxRest); //retangulos do topo
+
+		createBox(b2Vec2(16.383, 65.4605), b2Vec2(4, 4), degToRad(160), boxRest*2); //caixa grande do topo
+
+
+		createCircle(b2Vec2(26.8294, 56.0204), 2, circleRest); //circulos do meio
+		createCircle(b2Vec2(34.9199, 55.8419), 2, circleRest); //circulos do meio
+		createCircle(b2Vec2(30.1608, 51.3208), 2, circleRest); //circulos do meio
+
+		createCircle(b2Vec2(6.62231, 74.9578), 2, circleRest); //circulo do topo
+
+		// Flippers
+
+		b2Vec2 pEsquerda(24.6414, 4.52811), pDireita(37.2003, 4.52811);
+
+		//b2Body* fEsquerda = createBox(b2Vec2(pEsquerda.x-pEsquerda.x/2,pEsquerda.y), b2Vec2(3.5, 0.2), 0, 0);
+		b2Body* fEsquerda = createBox(b2Vec2(pEsquerda.x+6, pEsquerda.y), b2Vec2(3.5, 0.2), 0, 0);
+		b2Body* fDireita = createBox(pDireita, b2Vec2(3.5, 0.2), 0, 0);
+
+
+
+
+
+
+
+
+
 	}
 
 	void Step(Settings& settings) override
@@ -98,6 +133,24 @@ public:
 		return body;
 	}
 
+	b2Body* createBox(b2Vec2 pos, b2Vec2 dim, float angle, float restitution)
+	{
+		b2BodyDef bodyDef;
+
+		bodyDef.type = b2_staticBody;
+		bodyDef.angle = angle;
+		bodyDef.position.Set(pos.x, pos.y);
+		b2Body* body = m_world->CreateBody(&bodyDef);
+
+		b2PolygonShape staticBox;
+		staticBox.SetAsBox(dim.x, dim.y);
+		b2FixtureDef fixtureDef;
+		fixtureDef.shape = &staticBox;
+		fixtureDef.restitution = restitution;
+		body->CreateFixture(&fixtureDef);
+		return body;
+	}
+
 
 	b2Body* createCircle(b2Vec2 pos, float radius, b2Vec2 linearVelocity, float grav, float density, float friction, float restitution, bool isDynamic)
 	{
@@ -118,6 +171,24 @@ public:
 		fixtureDef.shape = &circle;
 		fixtureDef.density = density;
 		fixtureDef.friction = friction;
+		fixtureDef.restitution = restitution;
+		body->CreateFixture(&fixtureDef);
+
+		return body;
+	}
+
+	b2Body* createCircle(b2Vec2 pos, float radius, float restitution)
+	{
+		b2BodyDef bodyDef;
+		bodyDef.type = b2_staticBody;
+		bodyDef.position.Set(pos.x, pos.y);
+		b2Body* body = m_world->CreateBody(&bodyDef);
+
+		// Define another box shape for our dynamic body.
+		b2CircleShape circle;
+		circle.m_radius = radius;
+		b2FixtureDef fixtureDef;
+		fixtureDef.shape = &circle;
 		fixtureDef.restitution = restitution;
 		body->CreateFixture(&fixtureDef);
 
@@ -570,6 +641,10 @@ public:
 	void criarParedes(string arquivo)
 	{
 		ifstream is(arquivo);
+		if (!is) {
+			cout << "ERRO! Arquivo >>" << arquivo << "<< esta vazio ou nao pode ser carregado!\n";
+			return;
+		}
 		istream_iterator<double> start(is), end;
 		vector<double> numbers(start, end);
 		cout << "Read " << numbers.size() << " " << arquivo << endl;
@@ -611,4 +686,6 @@ float degToRad(float angleDeg)
 {
 	return angleDeg * b2_pi / 180.0f;
 }
+
+
 

@@ -50,6 +50,8 @@ public:
 			ground->CreateFixture(&fd);
 		}
 
+
+		
 		// Flippers
 		{
 			b2Vec2 p1(-2.0f, 0.0f), p2(2.0f, 0.0f);
