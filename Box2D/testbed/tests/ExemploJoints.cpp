@@ -93,9 +93,9 @@ public:
 			//rJointDef.collideConnected = true;
 
 			//Para limitar o angulo
-			//rJointDef.lowerAngle = degreesToRadians(-45); // -45 degrees
-			//rJointDef.upperAngle = degreesToRadians(45); // 45 degrees
-			//rJointDef.enableLimit = true;
+			rJointDef.lowerAngle = degreesToRadians(-45); // -45 degrees
+			rJointDef.upperAngle = degreesToRadians(45); // 45 degrees
+			rJointDef.enableLimit = true;
 
 			//Para criar um motor
 			rJointDef.maxMotorTorque = 100.0f; //N*m
