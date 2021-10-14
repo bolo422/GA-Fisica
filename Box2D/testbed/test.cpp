@@ -146,21 +146,21 @@ void Test::MouseDown(const b2Vec2& p)
 {
 	std::cout << "\nx: " << p.x << " y: " << p.y << std::endl;
 	std::cout << "\nb2Vec2(" << p.x << "," << p.y << ")" << std::endl;
-	b2BodyDef bodyDef;
-	bodyDef.type = b2_dynamicBody;
-	bodyDef.position.Set(p.x, p.y);
-	b2Body* body = m_world->CreateBody(&bodyDef);
+	//b2BodyDef bodyDef;
+	//bodyDef.type = b2_dynamicBody;
+	//bodyDef.position.Set(p.x, p.y);
+	//b2Body* body = m_world->CreateBody(&bodyDef);
 
-	// Define another box shape for our dynamic body.
-	b2CircleShape circle;
-	circle.m_radius = 0.7;
-	//dynamicBox.SetAsBox(dim.x, dim.y);
-	b2FixtureDef fixtureDef;
-	fixtureDef.shape = &circle;
-	fixtureDef.density = 1;
-	fixtureDef.friction = 1;
-	fixtureDef.restitution = 0.2;
-	body->CreateFixture(&fixtureDef);
+	//// Define another box shape for our dynamic body.
+	//b2CircleShape circle;
+	//circle.m_radius = 0.7;
+	////dynamicBox.SetAsBox(dim.x, dim.y);
+	//b2FixtureDef fixtureDef;
+	//fixtureDef.shape = &circle;
+	//fixtureDef.density = 1;
+	//fixtureDef.friction = 1;
+	//fixtureDef.restitution = 0.2;
+	//body->CreateFixture(&fixtureDef);
 
 
 

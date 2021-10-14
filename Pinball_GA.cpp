@@ -17,15 +17,21 @@ b2Vec2 decomposeVector(float angleDeg, float magnitude);
 float degToRad(float angleDeg);
 
 
-class MyTest : public Test //você cria a sua classe derivada da classe base Test
+class Pinball_GA : public Test //você cria a sua classe derivada da classe base Test
 {
 
 private:
 	
 	b2RevoluteJoint* rjoint;
 	b2RevoluteJoint* rjoint2;
-	bool m_button;
-	float flipperForce = 8000.0f;
+	b2Body* bola;
+	float bolaGrav = 1.0f;
+	bool bolaImpulse = true;
+	bool forcaManual = false;
+	float forcaMotorFlippers = 100.0f;
+	bool a_button;
+	bool d_button;
+	float flipperForce = 10000.0f;
 	int x = 57, y = 1;
 	bool a = false;
 	bool bolacri = false;
@@ -34,12 +40,15 @@ private:
 	float topcirclerest = 0.5;
 	float boxRest = 1.2;
 	int pontos = 0;
+	int melhorPontuacao = 0;
 	float globalForce = 0, globalAngle = 90;
 	float forca = 0;
+	
 
 public:
-	MyTest() {
-		
+	Pinball_GA() {
+		carregarRest();
+		melhorPontuacao = carregarPontos();
 		criarParedes("paredes/paredes1.txt");
 		criarParedes("paredes/arco direita.txt");
 		criarParedes("paredes/arco direita inferior.txt");
@@ -73,7 +82,7 @@ public:
 		b2Vec2 pEsquerda(24.6414, 4.52811), pDireita(37.2003, 4.52811);
 		float flipperSize = 5.4;
 		b2Body* fEsquerda = createBox(b2Vec2(pEsquerda.x, pEsquerda.y), b2Vec2(flipperSize, 0.3), b2Vec2(0, 0), 0, 1, 0, 0, true);
-		b2Body* fDireita = createBox(b2Vec2(pDireita.x, pDireita.y), b2Vec2(flipperSize, 0.3), b2Vec2(0, 0), 0, 1, 0, 0, true);
+		b2Body* fDireita = createBox(b2Vec2(pDireita.x, pDireita.y), b2Vec2(flipperSize, 0.3), b2Vec2(0, 0), 0, 1, 0, 0.4, true);
 
 
 		b2Vec2 worldAnchorOnBody1 = fEsquerda->GetWorldPoint(b2Vec2(-flipperSize , 0));
@@ -130,34 +139,54 @@ public:
 	void Step(Settings& settings) override
 	{
 
-		if (!m_button)
-		{
-			rjoint->SetMotorSpeed(20.0f);
-			rjoint2->SetMotorSpeed(-20.0f);
+		if (!a_button){
+		
+			rjoint->SetMotorSpeed(forcaMotorFlippers);
 		}
 		else
 		{
-			rjoint->SetMotorSpeed(-10.0f);
-			rjoint2->SetMotorSpeed(10.0f);
+			rjoint->SetMotorSpeed(forcaMotorFlippers * -1 / 2);
 		}
 
-		//srand((unsigned)time(0)); //para gerar números aleatórios reais.
-		//int maior = 150;
-		//int menor = 0;
-		//forca = rand() % (maior - menor + 1) + menor;
-		if (aumentando) {
+		if (!d_button)
+		{
+			rjoint2->SetMotorSpeed(forcaMotorFlippers * -1);
+		}
+		else
+		{
+			rjoint2->SetMotorSpeed(forcaMotorFlippers / 2);
+		}
+
+
+
+		if (aumentando && !forcaManual) {
 			forca++;
 			if (forca > 150) {
 				aumentando = false;
 			}
 		}
-		if (!aumentando) {
+		if (!aumentando && !forcaManual) {
 			forca--;
 			if (forca < 20) {
 				aumentando = true;
 			}
 		}
-
+		
+		if (bolacri) {
+			if (bola->GetPosition().y < -16.4553) {
+				bola->SetEnabled(false);
+				bolacri = false;
+				if (pontos > melhorPontuacao) {
+					melhorPontuacao = pontos;
+					salvarPontos(pontos);
+					melhorPontuacao = carregarPontos();
+				}
+				pontos = 0;
+			}
+			if (bola->GetPosition().y < 0.8 && bola->GetPosition().x > 54.523) {
+				bolaImpulse = true;
+			}
+		}
 
 		//Chama o passo da simulação e o algoritmo de rendering
 		Test::Step(settings);
@@ -174,15 +203,31 @@ public:
 		
 		ImGui::SetNextWindowPos(ImVec2(10.0f, 100.0f));
 		ImGui::SetNextWindowSize(ImVec2(210.0f, 285.0f));
-		ImGui::Begin("PINBALL", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+		ImGui::Begin("PINBALL - Erick e Jonathan", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+		ImGui::TextColored(ImVec4(0, 1, 1, 1), "Instrucoes:\nA e D para usar as palhetas\nS para lancar a bolinha");
 
 		if (ImGui::Button("FORCA"))
 		{
 			Create();
 		}
+		if(!forcaManual)
+			ImGui::SliderFloat("", &forca, 20.0f, 150.0f, "%.0f");
+		else
+			ImGui::SliderFloat("", &forca, 20.0f, 500.0f, "%.0f");
 
-		ImGui::SliderFloat("", &forca, 0.0f, 150.0f, "%.0f");
+		
+
+		ImGui::Checkbox("Forca Manual", &forcaManual);
+
+
+		float showGrav = bolaGrav*10;
+		ImGui::SliderFloat("Gravidade: ", &showGrav, 10.0f, 50.0f, "%.0f");
+		bolaGrav = showGrav / 10;
+		ImGui::SliderFloat("Forca Flippers: ", &forcaMotorFlippers, 0.0f, 100.0f, "%.0f");
 		ImGui::Text("Pontos:%d", pontos);
+		ImGui::Text("Melhor Pontuacao:%d", melhorPontuacao);
+
 		ImGui::End();
 
 		
@@ -192,7 +237,7 @@ public:
 						   //o autor da Box2D usa um padrão de projeto chamado Factory
 						   //para sua arquitetura de classes
 	{
-		return new MyTest;
+		return new Pinball_GA;
 	}
 
 	void Keyboard(int key) override
@@ -200,11 +245,14 @@ public:
 		switch (key)
 		{
 		case GLFW_KEY_A:
-			m_button = true;
+			a_button = true;
+			break;
+		case GLFW_KEY_D:
+			d_button = true;
 			break;
 
-		case GLFW_KEY_E:
-			if (key == GLFW_KEY_E) {
+		case GLFW_KEY_S:
+			if (key == GLFW_KEY_S) {
 				
 				globalForce = forca;
 			}
@@ -219,17 +267,21 @@ public:
 		switch (key)
 		{
 		case GLFW_KEY_A:
-			m_button = false;
+			a_button = false;
 			break;
-		case GLFW_KEY_E:
-			if (key == GLFW_KEY_E  ) {
+		case GLFW_KEY_D:
+			d_button = false;
+			break;
+		case GLFW_KEY_S:
+			if (key == GLFW_KEY_S  ) {
 			
 				if (bolacri == false)
 				{
 					b2BodyDef bodyDef;
 					bodyDef.type = b2_dynamicBody;
 					bodyDef.position.Set(x, y);
-					b2Body* body = m_world->CreateBody(&bodyDef);
+					bodyDef.gravityScale = bolaGrav;
+					bola = m_world->CreateBody(&bodyDef);
 
 					// Define another box shape for our dynamic body.
 					b2CircleShape circle;
@@ -240,11 +292,17 @@ public:
 					fixtureDef.density = 1;
 					fixtureDef.friction = 1;
 					fixtureDef.restitution = 0.2;
-					body->CreateFixture(&fixtureDef);
+					bola->CreateFixture(&fixtureDef);
 
 					b2Vec2 force = decomposeVector(globalAngle, globalForce);
-					body->ApplyLinearImpulse(force, body->GetWorldCenter(), true);
+					bola->ApplyLinearImpulse(force, bola->GetWorldCenter(), true);
 					bolacri = true;
+					bolaImpulse = false;
+				}
+				else if (bolaImpulse) {
+					b2Vec2 force = decomposeVector(globalAngle, globalForce);
+					bola->ApplyLinearImpulse(force, bola->GetWorldCenter(), true);
+					bolaImpulse = false;
 				}
 				
 			}
@@ -361,13 +419,13 @@ public:
 		}
 		istream_iterator<double> start(is), end;
 		vector<double> numbers(start, end);
-		cout << "Read " << numbers.size() << " " << arquivo << endl;
+		//cout << "Read " << numbers.size() << " " << arquivo << endl;
 
 		// print the numbers to stdout
-		cout << "numbers read in:\n";
-		copy(numbers.begin(), numbers.end(),
-			ostream_iterator<double>(cout, " "));
-		cout << endl;
+		//cout << "numbers read in:\n";
+		//copy(numbers.begin(), numbers.end(),
+		//	ostream_iterator<double>(cout, " "));
+		//cout << endl;
 
 
 		float mult = 2.0f;
@@ -377,16 +435,72 @@ public:
 			if(i+3<=numbers.size())
 				paredes = createEdge(b2Vec2(numbers[i] * mult, numbers[i + 1] * mult), b2Vec2(numbers[i + 2] * mult, numbers[i + 3] * mult));
 		}
-		
+		is.close();
 		return paredes;
 	}
 
+	void salvarPontos(int pontos) {
+		ofstream is("melhorPontuacao.txt");
+		if (!is) {
+			cout << "ERRO! Arquivo >> melhorPontuacao.txt << esta vazio ou nao pode ser carregado!\n";
+		}
+		is << to_string(pontos);
+		is.close();
+	}
 
+	int carregarPontos() {
+		ifstream is("melhorPontuacao.txt");
+		if (!is) {
+			cout << "ERRO! Arquivo >> melhorPontuacao.txt << esta vazio ou nao pode ser carregado!\n";
+		}
+		string n;
+		getline(is, n);
+		is.close();
+		return stoi(n);
+	}
+
+	void carregarRest() {
+		ifstream is("configs.txt");
+		if (!is) {
+			cout << "ERRO! Arquivo >> configs.txt << esta vazio ou nao pode ser carregado!\n";
+		}
+		string n;
+		int i = 0;
+
+		/*float circleRest = 0.8;
+		float topcirclerest = 0.5;
+		float boxRest = 1.2;*/
+
+		while (is.good()) {
+			getline(is, n);
+			if (n[0] != '#') {
+				switch (i)
+				{
+				case 0: boxRest = stof(n) + 0.0008; i++;	break;
+				case 1: circleRest = stof(n) + 0.0007; i++;	break;
+				case 2: topcirclerest = stof(n) + 0.0009; i++;	break;
+				}
+			}
+		}
+			if (boxRest < 0.5)
+				boxRest = 0.5;
+
+			if (topcirclerest < 0.5)
+				topcirclerest = 0.5;
+
+			if (circleRest < 0.5)
+				circleRest = 0.5;
+
+						//DEBUG
+			//cout << "\nboxRest: " << boxRest << "\circleRest: " << circleRest << "\topcirclerest: " << topcirclerest << endl;
+		
+		is.close();
+	}
 
 };
 
 //Aqui fazemos o registro do novo teste 
-static int testIndex = RegisterTest("Examples", "MyTest", MyTest::Create);
+static int testIndex = RegisterTest("Examples", "Pinball_GA", Pinball_GA::Create);
 
 
 b2Vec2 decomposeVector(float angleDeg, float magnitude) 
