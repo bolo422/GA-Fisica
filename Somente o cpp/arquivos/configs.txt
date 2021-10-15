@@ -1,0 +1,11 @@
+# Para comentar neste arquivo utilize sempre # na frente, para modificar os valores, modifique a linha que não tem #
+#
+#
+# Restituição das Caixas (padrão = 1.2):
+1.2
+#
+# Restituição dos Circulos do Meio (padrão = 0.8):
+0.8
+#
+# Restituição do Circulo do Topo (padrão = 0.5):
+0.5
